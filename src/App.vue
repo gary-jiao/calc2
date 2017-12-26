@@ -209,8 +209,7 @@
 				content="直接点击页眉区域，可以修改页眉内容。">
 				</el-popover>
                 <div v-popover:popover1 class="print-repeat" contenteditable="true">
-                    <h3>口算（100以内加减法混合运算）</h3>
-                    姓名：__________ 日期：____月____日 时间：________ 对题：____道<br/><br/>
+                    <h3>30以内口算</h3>
                 </div>
             </th>
         </tr>
@@ -259,11 +258,11 @@
 		<el-input type="password" v-model="password"></el-input>
 		</el-form-item>
 		</el-form>
-		<span slot="footer" class="dialog-footer">
+		<!--span slot="footer" class="dialog-footer">
 			<el-button @click="loginDialogVisible = false">取消</el-button>
 			<el-button @click="register">注册新用户</el-button>
 			<el-button type="primary" @click="login">登录</el-button>
-		</span>
+		</span-->
 	</el-dialog>
 	<el-dialog
 		title="请选择要加载的试卷"
@@ -334,23 +333,15 @@ export default {
 			  date: '2016-05-04',
 			  name: '王小虎',
 			  address: '上海市普陀区金沙江路 1517 弄'
-		  }, {
-			  date: '2016-05-01',
-			  name: '王小虎',
-			  address: '上海市普陀区金沙江路 1519 弄'
-		  }, {
-			  date: '2016-05-03',
-			  name: '王小虎',
-			  address: '上海市普陀区金沙江路 1516 弄'
 		  }],
 		  currentRow: null,
 		mycounter: 0,
 		username: '',
 		password: '',
 		is_login: false,
-        count: 100,
+        count: 48,
         pagerows: 20,
-        cols: 4,
+        cols: 3,
 
 		isadd: true,
 		issub: true,
@@ -361,14 +352,14 @@ export default {
         whichcond: '',
 
         itemcount: 0,
-        defrange: {min: 0, max:100},
-        result: {min: 0, max:100},
+        defrange: {min: 0, max:20},	// 运算项1/2取值范围
+        result: {min: 0, max:30},	// 得数取值范围
         range: [],
         borrow: 'random',
-        fontsize: 22,
+        fontsize: 30,
         fontfamily: '宋体',
-        cellPadding: 6,
-        cellSpacing: 8,
+        cellPadding: 15,
+        cellSpacing: 15,
         res: [],
         appendemptyrows: false,
         report: {
@@ -751,6 +742,23 @@ export default {
             if( ! this.isValid() ) {
                 return;
             }
+			// ignore confirm
+			this.report.total = 0;
+			this.report.addcnt = 0; // 加法题数量
+			this.report.subcnt = 0; // 减法题数量
+			this.report.mulcnt = 0;
+			this.report.divcnt = 0;
+			this.report.borrowcnt = 0; // 借/进位题数量
+			this.report.exceptcnt = 0; // 异常题数量(由于冲突，未能按规则生成)
+			this.res = [];
+			for(var i = 0; i < this.count; i ++) {
+				var item = {
+					li: this.genItem()
+				};
+				this.res.push(item);
+			}
+
+			/*
 			this.$confirm('您确定要重新生成所有试题吗？', '提示', {
 				confirmButtonText: '确定',
 				cancelButtonText: '取消',
@@ -772,6 +780,7 @@ export default {
 				}
 			}).catch(() => {
 			});
+			*/
         },
 
         doPrint: function() {
@@ -780,6 +789,9 @@ export default {
             } else {
                 window.print();
             }
+
+			// re-generate after print
+			this.doGen();
 			//this.doAddData();
 			//this.callServerCode();
         },
